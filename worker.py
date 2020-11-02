@@ -1,13 +1,11 @@
 import os
 
 from rq import Connection, Worker, Queue
-from raven import Client
-from raven.transport.http import HTTPTransport
-from rq.contrib.sentry import register_sentry
+import sentry_sdk
+from sentry_sdk.integrations.rq import RqIntegration
 
-client = Client(os.environ['SENTRY_DSN'], transport=HTTPTransport)
+sentry_sdk.init(os.environ['SENTRY_DSN'], integrations=[RqIntegration()])
 
 with Connection():
 	worker = Worker(map(Queue, ['default']))
-	register_sentry(client, worker)
 	worker.work()
